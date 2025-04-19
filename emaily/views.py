@@ -57,7 +57,7 @@ def check_email(email):
 
     def smtp_check():
         try:
-            server = smtplib.SMTP(timeout=10)
+            server = smtplib.SMTP(timeout=20)
             server.connect(mx_record)
             server.helo("example.com")
             server.mail("verifier@example.com")
