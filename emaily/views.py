@@ -11,6 +11,7 @@ import dns.resolver
 import smtplib
 from tempfile import NamedTemporaryFile
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 
 
 EMAIL_REGEX = re.compile(r"[^@]+@[^@]+\.[^@]+")
@@ -23,7 +24,7 @@ data = {}
 def index(request):
     return render(request, 'emaily/index.html')
 
-def check_email(email):
+def check_email(email, server=None):
     import time
 
     if not EMAIL_REGEX.match(email):
@@ -44,7 +45,7 @@ def check_email(email):
         return "invalid", "no_mx"
 
     try:
-        server = smtplib.SMTP(timeout=30)
+        # server = smtplib.SMTP(timeout=100)
         server.connect(mx_record)
         server.helo("example.com")
         server.mail("probe@example.com")
@@ -57,7 +58,7 @@ def check_email(email):
 
     def smtp_check():
         try:
-            server = smtplib.SMTP(timeout=30)
+            # server = smtplib.SMTP(timeout=100)
             server.connect(mx_record)
             server.helo("example.com")
             server.mail("verifier@example.com")
@@ -115,6 +116,9 @@ def verify(request):
     }
 
     def run():
+
+        smtp_server = get_smtp_server()
+
         for i, row in enumerate(reader, start=1):
             if data[job_id]['cancel']:
                 data[job_id]['log'] = f"\u274c Canceled job {job_id}"
@@ -123,7 +127,7 @@ def verify(request):
             if not email:
                 status, reason = 'invalid', 'empty_email'
             else:
-                status, reason = check_email(email)
+                status, reason = check_email(email, smtp_server)
             row['status'], row['reason'] = status, reason
             writer.writerow(row)
             percent = int((i / total) * 100)
@@ -141,6 +145,19 @@ def verify(request):
     threading.Thread(target=run).start()
 
     return JsonResponse({"job_id": job_id})
+
+
+def get_smtp_server():
+    server = smtplib.SMTP(host=settings.SMTP_HOST, port=settings.SMTP_PORT, timeout=10)
+
+    server.ehlo()
+    if settings.USE_TLS:
+        server.starttls()
+        server.ehlo()
+    if settings.SMTP_HOST_USER and settings.SMTP_HOST_PASSWORD:
+        print(settings.SMTP_HOST_USER, settings.SMTP_HOST_PASSWORD)
+        server.login(settings.SMTP_HOST_USER, settings.SMTP_HOST_PASSWORD)
+    return server
 
 
 def progress(request):
