@@ -83,7 +83,7 @@
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
     const jobsContainer = document.getElementById('jobs');
-    const baseUrl = 'http://localhost:8000/emaily';
+    const baseUrl = window.location.href;
     const pauseMs = 5000;
 
     let jobList = JSON.parse(localStorage.getItem('verifier-jobs') || '[]');
@@ -104,7 +104,7 @@
       formData.append('file', file);
       formData.append('filename', file.name);
 
-      fetch(`${baseUrl}/verify`, {
+      fetch(`${baseUrl}verify`, {
         method: 'POST',
         body: formData
       })
@@ -147,27 +147,27 @@
 
       cancelBtn.onclick = () => {
         canceled = true;
-        fetch(`${baseUrl}/cancel?job_id=${job_id}`, { method: 'POST' });
+        fetch(`${baseUrl}cancel?job_id=${job_id}`, { method: 'POST' });
         status.innerText = `❌ Canceled job ${job_id}`;
         actions.innerHTML = '';
       };
 
       closeBtn.onclick = () => {
-        fetch(`${baseUrl}/cancel?job_id=${job_id}`, { method: 'POST' });
+        fetch(`${baseUrl}cancel?job_id=${job_id}`, { method: 'POST' });
         removeJob();
       };
 
       const poll = setInterval(() => {
         if (canceled || completed) return clearInterval(poll);
 
-        fetch(`${baseUrl}/progress?job_id=${job_id}`)
+        fetch(`${baseUrl}progress?job_id=${job_id}`)
           .then(res => res.json())
           .then(data => {
             bar.style.width = `${data.percent}%`;
             status.innerText = `${data.percent}% done – Row ${data.row} of ${data.total}`;
           });
 
-        fetch(`${baseUrl}/log?job_id=${job_id}`)
+        fetch(`${baseUrl}log?job_id=${job_id}`)
           .then(res => res.text())
           .then(text => {
             logLine.innerText = text.replace(/^\[\d+%\] \(\d+\/\d+\) /, '');
@@ -176,7 +176,7 @@
 
       const wait = setInterval(() => {
         if (canceled || completed) return clearInterval(wait);
-        fetch(`${baseUrl}/progress?job_id=${job_id}`)
+        fetch(`${baseUrl}progress?job_id=${job_id}`)
           .then(res => res.json())
           .then(data => {
             if (data.percent >= 100) {
@@ -186,12 +186,12 @@
                 <div style="margin-top: 10px;">
                   <strong>⬇️ Download CSV:</strong><br>
                  <div>
-      <a href="${baseUrl}/download?job_id=${job_id}&type=all" target="_blank">All Leads</a> |
-      <a href="${baseUrl}/download?job_id=${job_id}&type=valid" target="_blank">Valid Only</a>
+      <a href="${baseUrl}download?job_id=${job_id}&type=all" target="_blank">All Leads</a> |
+      <a href="${baseUrl}download?job_id=${job_id}&type=valid" target="_blank">Valid Only</a>
     </div>
     <div>
-      <a href="${baseUrl}/download?job_id=${job_id}&type=risky" target="_blank">Risky Only</a> |
-      <a href="${baseUrl}/download?job_id=${job_id}&type=risky_invalid" target="_blank">Risky & Invalid</a>
+      <a href="${baseUrl}download?job_id=${job_id}&type=risky" target="_blank">Risky Only</a> |
+      <a href="${baseUrl}download?job_id=${job_id}&type=risky_invalid" target="_blank">Risky & Invalid</a>
     </div>
                   </div>
               `;
