@@ -148,7 +148,7 @@ def verify(request):
 
 
 def get_smtp_server():
-    server = smtplib.SMTP(host=settings.SMTP_HOST, port=settings.SMTP_PORT, timeout=10)
+    server = smtplib.SMTP(host=settings.SMTP_HOST, port=settings.SMTP_PORT, timeout=100)
 
     server.ehlo()
     if settings.USE_TLS:
